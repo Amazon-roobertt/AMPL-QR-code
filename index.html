@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AMPL - Gerador de Etiquetas Premium</title>
     
-    <!-- Scripts Externos -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -14,21 +13,9 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            -webkit-print-color-adjust: exact;
-        }
-
-        .etiqueta-container {
-            width: 190mm;
-            height: 82mm;
-            margin: 0 auto;
-        }
-
-        @media print {
-            .print-hidden { display: none !important; }
-        }
+        body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; }
+        .etiqueta-container { width: 190mm; height: 82mm; margin: 0 auto; }
+        @media print { .print-hidden { display: none !important; } }
     </style>
 </head>
 <body class="min-h-screen bg-[#F1F5F9] text-slate-900 pb-24 relative overflow-x-hidden">
@@ -61,7 +48,7 @@
                     <h1 class="text-4xl font-black text-slate-800 tracking-tighter uppercase leading-tight">AMPL</h1>
                     <p class="text-slate-500 font-bold text-sm flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-[#FF9900]"></span>
-                        Gerador de Etiquetas Premium v100
+                        Gerador de Etiquetas Premium
                     </p>
                 </div>
             </div>
@@ -84,141 +71,94 @@
             </div>
         </header>
 
-        <!-- PARÂMETROS -->
+        <!-- BARRA DE PROGRESSO (Oculta por padrão) -->
+        <div id="progressArea" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-bold text-slate-700">Processando Páginas...</span>
+                <span id="progressText" class="text-sm font-black text-[#FF9900]">0%</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-3">
+                <div id="progressBar" class="bg-[#FF9900] h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- CONFIGURAÇÕES -->
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print-hidden">
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Estado</span><input id="inState" type="text" value="SP" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Tipo</span><input id="inType" type="text" value="X" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Cód. Rota</span><input id="inRoute" type="text" value="5060" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Seq. Inicial</span><input id="inSeq" type="number" value="101" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Node</span><input id="inNode" type="text" value="SSJ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Estado</span><input id="inState" type="text" value="SP" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Tipo</span><input id="inType" type="text" value="X" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Cód. Rota</span><input id="inRoute" type="text" value="5060" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Seq. Inicial</span><input id="inSeq" type="number" value="101" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Node</span><input id="inNode" type="text" value="SSJ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold"></div>
             </div>
-            
-            <button id="btnProcess" class="hidden w-full mt-6 bg-[#FF9900] hover:bg-orange-600 text-white font-black py-4 rounded-2xl shadow-lg transition-all transform active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-2">
+            <button id="btnProcess" class="hidden w-full mt-6 bg-[#FF9900] hover:bg-orange-600 text-white font-black py-4 rounded-2xl shadow-lg uppercase tracking-tighter flex items-center justify-center gap-2">
                 <i data-lucide="check-circle-2" class="w-5 h-5"></i> Gerar Visualização
             </button>
-
-            <div id="errorArea" class="hidden mt-4 bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl flex items-center gap-3">
-                <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                <span id="errorMsg" class="text-xs font-bold uppercase tracking-tight"></span>
-            </div>
         </div>
 
         <!-- ÁREA DE PRÉ-VISUALIZAÇÃO -->
         <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
             <div id="previewArea" class="p-4 md:p-12 bg-[#E2E8F0] overflow-auto min-h-[600px] flex flex-col items-center gap-16">
-                <!-- Estado Vazio -->
                 <div id="emptyState" class="py-40 flex flex-col items-center justify-center text-center opacity-30 grayscale">
-                    <div class="bg-white p-16 rounded-full shadow-inner mb-8">
-                        <i data-lucide="file-spreadsheet" class="w-24 h-24 stroke-1 text-[#FF9900]"></i>
-                    </div>
-                    <h3 class="text-4xl font-black text-slate-800 uppercase tracking-tighter italic">AMPL CORE</h3>
-                    <p class="mt-4 font-bold text-slate-500">Suba o planejamento para gerar as etiquetas.</p>
+                    <div class="bg-white p-16 rounded-full shadow-inner mb-8"><i data-lucide="file-spreadsheet" class="w-24 h-24 stroke-1 text-[#FF9900]"></i></div>
+                    <h3 class="text-4xl font-black text-slate-800 uppercase tracking-tighter">AMPL CORE</h3>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Inicializar Ícones Lucide
         lucide.createIcons();
-
-        // Estados
-        let rawFile = null;
         let processedData = [];
 
-        // Referências DOM
-        const fileInput = document.getElementById('fileInput');
-        const btnProcess = document.getElementById('btnProcess');
-        const btnClear = document.getElementById('btnClear');
-        const btnDownload = document.getElementById('btnDownload');
-        const previewArea = document.getElementById('previewArea');
-        const emptyState = document.getElementById('emptyState');
-        const errorArea = document.getElementById('errorArea');
-        const errorMsg = document.getElementById('errorMsg');
-
-        // Estilo Dinâmico da Rota (Conforme código original)
         function getRouteStyle(text) {
             const len = text.length;
             let size = '84px'; 
             if (len > 4) size = '70px';
             if (len > 6) size = '58px';
             if (len > 8) size = '50px';
-
-            return `font-family: 'Inter', Arial, sans-serif; font-size: ${size}; font-weight: 900; color: #000000; letter-spacing: -0.05em; white-space: nowrap; line-height: 1.2; display: inline-block; text-align: center;`;
+            return `font-family: 'Inter', sans-serif; font-size: ${size}; font-weight: 900; line-height: 1.2; text-align: center;`;
         }
 
-        // Funções Auxiliares
-        const hideError = () => errorArea.classList.add('hidden');
-        const showError = (txt) => {
-            errorMsg.innerText = txt;
-            errorArea.classList.remove('hidden');
-        }
+        const fileInput = document.getElementById('fileInput');
+        const btnProcess = document.getElementById('btnProcess');
+        const previewArea = document.getElementById('previewArea');
+        const progressArea = document.getElementById('progressArea');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
 
         fileInput.addEventListener('change', (e) => {
-            rawFile = e.target.files[0];
-            if (rawFile) {
-                document.getElementById('fileLabel').innerText = "Trocar Arquivo";
+            if (e.target.files[0]) {
+                document.getElementById('fileLabel').innerText = "Arquivo Pronto";
                 btnProcess.classList.remove('hidden');
-                hideError();
             }
         });
 
-        btnClear.addEventListener('click', () => {
-            rawFile = null;
-            processedData = [];
-            fileInput.value = "";
-            document.getElementById('fileLabel').innerText = "Carregar Excel";
-            btnProcess.classList.add('hidden');
-            btnClear.classList.add('hidden');
-            btnDownload.disabled = true;
-            previewArea.innerHTML = '';
-            previewArea.appendChild(emptyState);
-        });
-
         btnProcess.addEventListener('click', () => {
-            if (!rawFile) return;
+            const file = fileInput.files[0];
             const reader = new FileReader();
             reader.onload = (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                
+                const resKey = Object.keys(json[0]).find(k => k.toLowerCase().includes('resourceid'));
+                const labKey = Object.keys(json[0]).find(k => k.toLowerCase().includes('label'));
 
-                    if (jsonData.length === 0) return showError("O arquivo parece estar vazio.");
+                json.sort((a, b) => String(a[labKey]).localeCompare(String(b[labKey]), undefined, {numeric: true}));
 
-                    const sample = jsonData[0];
-                    const resKey = Object.keys(sample).find(k => k.toLowerCase().includes('resourceid'));
-                    const labKey = Object.keys(sample).find(k => k.toLowerCase().includes('label'));
+                const startSeq = parseInt(document.getElementById('inSeq').value) || 101;
+                processedData = json.map((row, i) => ({
+                    resourceId: String(row[resKey]).trim(),
+                    label: String(row[labKey]).trim(),
+                    bagCode: `${document.getElementById('inState').value}-${document.getElementById('inType').value}-${document.getElementById('inRoute').value}-${startSeq + i}-${document.getElementById('inNode').value}`
+                }));
 
-                    if (!resKey || !labKey) return showError("Colunas 'resourceId' ou 'label' não encontradas.");
-
-                    // Ordenação Natural
-                    jsonData.sort((a, b) => String(a[labKey]).localeCompare(String(b[labKey]), undefined, { numeric: true, sensitivity: 'base' }));
-
-                    const startSeq = parseInt(document.getElementById('inSeq').value) || 101;
-                    const state = document.getElementById('inState').value.toUpperCase();
-                    const type = document.getElementById('inType').value.toUpperCase();
-                    const route = document.getElementById('inRoute').value.toUpperCase();
-                    const node = document.getElementById('inNode').value.toUpperCase();
-
-                    processedData = jsonData.map((row, index) => {
-                        const seq = startSeq + index;
-                        return {
-                            resourceId: String(row[resKey]).trim(),
-                            label: String(row[labKey]).trim(),
-                            bagCode: `${state}-${type}-${route}-${seq}-${node}`
-                        };
-                    });
-
-                    renderEtiquetas();
-                    btnDownload.disabled = false;
-                    btnClear.classList.remove('hidden');
-                    hideError();
-                } catch (err) { showError("Erro ao processar o arquivo."); }
+                renderEtiquetas();
+                document.getElementById('btnDownload').disabled = false;
+                document.getElementById('btnClear').classList.remove('hidden');
             };
-            reader.readAsArrayBuffer(rawFile);
+            reader.readAsArrayBuffer(file);
         });
 
         function renderEtiquetas() {
@@ -229,7 +169,7 @@
             chunks.forEach((chunk, idx) => {
                 const page = document.createElement('div');
                 page.id = `page-chunk-${idx}`;
-                page.className = "flex flex-col items-center bg-white shadow-2xl border border-slate-200 relative shrink-0";
+                page.className = "flex flex-col items-center bg-white shadow-2xl border border-slate-200 relative shrink-0 mb-10";
                 page.style = "width: 210mm; height: 297mm; padding: 15mm 0;";
                 
                 let html = `<div class="absolute top-2 left-6 text-[9px] font-black text-slate-300 uppercase tracking-widest">AMPL PAG ${idx + 1}</div>
@@ -237,11 +177,11 @@
 
                 chunk.forEach(item => {
                     html += `
-                    <div class="bg-white border-[2px] border-black rounded-[2.5rem] p-10 flex items-center justify-center relative shrink-0 etiqueta-container">
+                    <div class="etiqueta-container bg-white border-[2px] border-black rounded-[2.5rem] p-10 flex items-center justify-center relative shrink-0">
                         <div class="grid grid-cols-[1.2fr_1.6fr_1.2fr] w-full h-full items-center">
                             <div class="flex flex-col items-center justify-center space-y-4 text-center h-full">
                                 <span class="text-xl font-black uppercase tracking-widest text-slate-900 leading-none">BAG CODE</span>
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.bagCode)}" class="w-[180px] h-[180px] object-contain">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.bagCode)}" class="w-[180px] h-[180px]">
                             </div>
                             <div class="flex flex-col items-center justify-center border-x-[2px] border-dotted border-slate-200 h-full px-4 text-center">
                                 <span class="text-sm font-black text-[#FF9900] mb-4 tracking-[0.4em] uppercase shrink-0 leading-none">ROTA</span>
@@ -251,7 +191,7 @@
                             </div>
                             <div class="flex flex-col items-center justify-center space-y-4 text-center h-full">
                                 <span class="text-xl font-black uppercase tracking-widest text-slate-900 leading-none">CARRINHO</span>
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.resourceId)}" class="w-[180px] h-[180px] object-contain">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.resourceId)}" class="w-[180px] h-[180px]">
                             </div>
                         </div>
                     </div>`;
@@ -263,30 +203,49 @@
             });
         }
 
-        btnDownload.addEventListener('click', async () => {
+        // DOWNLOAD COM PROCESSAMENTO PÁGINA A PÁGINA (MELHOR RESOLUÇÃO E SEM ERRO)
+        document.getElementById('btnDownload').addEventListener('click', async function() {
+            const btn = this;
             const downloadText = document.getElementById('downloadText');
-            btnDownload.disabled = true;
-            
-            try {
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-                const pages = previewArea.querySelectorAll('[id^="page-chunk-"]');
+            btn.disabled = true;
+            progressArea.classList.remove('hidden');
 
-                for (let i = 0; i < pages.length; i++) {
-                    downloadText.innerText = `Processando ${Math.round(((i + 1) / pages.length) * 100)}%`;
-                    await new Promise(r => setTimeout(r, 300));
-                    const canvas = await html2canvas(pages[i], { scale: 2.5, useCORS: true, backgroundColor: "#ffffff" });
-                    const imgData = canvas.toDataURL('image/png', 0.9);
-                    if (i > 0) pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
-                }
-                pdf.save(`AMPL_Etiquetas_${new Date().toISOString().slice(0,10)}.pdf`);
-            } catch (err) { alert("Erro ao gerar PDF."); }
-            finally {
-                downloadText.innerText = "Baixar PDF";
-                btnDownload.disabled = false;
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            const pages = previewArea.querySelectorAll('[id^="page-chunk-"]');
+
+            for (let i = 0; i < pages.length; i++) {
+                // Atualiza Barra
+                const pct = Math.round(((i + 1) / pages.length) * 100);
+                progressBar.style.width = `${pct}%`;
+                progressText.innerText = `${pct}%`;
+                downloadText.innerText = `Lendo pág. ${i+1}`;
+
+                // Renderiza a página específica
+                const canvas = await html2canvas(pages[i], {
+                    scale: 2.5, // Alta resolução
+                    useCORS: true,
+                    backgroundColor: "#ffffff",
+                    logging: false
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                if (i > 0) pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+
+                // IMPORTANTE: Limpa o canvas da memória após adicionar ao PDF
+                canvas.remove();
+                await new Promise(r => setTimeout(r, 100)); // Pequena pausa para o navegador respirar
             }
+
+            pdf.save(`AMPL_Etiquetas_${new Date().getTime()}.pdf`);
+            
+            downloadText.innerText = "Baixar PDF";
+            btn.disabled = false;
+            setTimeout(() => progressArea.classList.add('hidden'), 2000);
         });
+
+        document.getElementById('btnClear').onclick = () => location.reload();
     </script>
 </body>
 </html>
