@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AMPL - Gerador de Etiquetas Premium</title>
     
+    <!-- Scripts Externos -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -14,21 +15,25 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         
-        body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; }
-        .etiqueta-container { width: 190mm; height: 84mm; margin: 0 auto; }
-        
-        /* Força o texto a ficar em uma única linha e ajusta o tamanho automaticamente */
-        .rota-text {
-            white-space: nowrap;
-            display: inline-block;
-            line-height: 1;
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-print-color-adjust: exact;
         }
 
-        @media print { .print-hidden { display: none !important; } }
+        .etiqueta-container {
+            width: 190mm;
+            height: 82mm;
+            margin: 0 auto;
+        }
+
+        @media print {
+            .print-hidden { display: none !important; }
+        }
     </style>
 </head>
-<body class="min-h-screen bg-[#F1F5F9] text-slate-900 pb-24 relative">
+<body class="min-h-screen bg-[#F1F5F9] text-slate-900 pb-24 relative overflow-x-hidden">
 
+    <!-- Marca d'água -->
     <div class="fixed bottom-6 right-6 flex items-center gap-4 select-none opacity-20 hover:opacity-80 transition-opacity duration-300 pointer-events-none z-50 print-hidden">
         <div class="bg-black p-0 rounded-2xl shadow-xl flex flex-col items-center justify-center w-14 h-14 overflow-hidden border border-slate-800 leading-none relative shrink-0">
             <span class="text-white font-black text-[14px] tracking-tighter z-10 -mt-1 uppercase">AMPL</span>
@@ -43,6 +48,7 @@
     </div>
 
     <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+        <!-- CABEÇALHO -->
         <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 print-hidden">
             <div class="flex items-center gap-5">
                 <div class="bg-black p-0 rounded-2xl shadow-xl flex flex-col items-center justify-center w-24 h-24 overflow-hidden border border-slate-800 leading-none relative shrink-0">
@@ -55,19 +61,21 @@
                     <h1 class="text-4xl font-black text-slate-800 tracking-tighter uppercase leading-tight">AMPL</h1>
                     <p class="text-slate-500 font-bold text-sm flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-[#FF9900]"></span>
-                        Gerador de Etiquetas Premium
+                        Gerador de Etiquetas Premium v100
                     </p>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
                 <button id="btnClear" class="hidden flex items-center gap-2 bg-white border border-slate-200 text-red-500 hover:bg-red-50 px-5 py-3 rounded-xl transition-all font-bold text-sm shadow-sm">
-                    <i data-lucide="trash-2" class="w-[18px]"></i> Limpar
+                    <i data-lucide="trash-2" class="w-[18px]"></i> Limpar Tudo
                 </button>
-                <button id="btnDownload" disabled class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl transition-all shadow-md font-bold text-sm disabled:opacity-50">
-                    <i data-lucide="download" class="w-[18px]"></i>
+
+                <button id="btnDownload" disabled class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl transition-all shadow-md font-bold text-sm disabled:opacity-50 min-w-[180px] justify-center">
+                    <i id="downloadIcon" data-lucide="download" class="w-[18px]"></i>
                     <span id="downloadText">Baixar PDF</span>
                 </button>
+
                 <label class="flex items-center gap-2 px-6 py-3 rounded-xl cursor-pointer transition-all shadow-md font-bold text-sm bg-[#FF9900] hover:bg-orange-600 text-white">
                     <i data-lucide="plus-circle" class="w-[18px]"></i>
                     <span id="fileLabel">Carregar Excel</span>
@@ -76,62 +84,99 @@
             </div>
         </header>
 
+        <!-- PARÂMETROS -->
         <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print-hidden">
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Estado</span><input id="stateCode" type="text" value="SP" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Tipo</span><input id="typeCode" type="text" value="X" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Cód. Rota</span><input id="routeId" type="text" value="5060" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Seq. Inicial</span><input id="startSequence" type="number" value="101" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
-                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Node</span><input id="nodeCode" type="text" value="SSJ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Estado</span><input id="inState" type="text" value="SP" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Tipo</span><input id="inType" type="text" value="X" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Cód. Rota</span><input id="inRoute" type="text" value="5060" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Seq. Inicial</span><input id="inSeq" type="number" value="101" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
+                <div><span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Node</span><input id="inNode" type="text" value="SSJ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]"></div>
             </div>
+            
             <button id="btnProcess" class="hidden w-full mt-6 bg-[#FF9900] hover:bg-orange-600 text-white font-black py-4 rounded-2xl shadow-lg transition-all transform active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-2">
-                <i data-lucide="check-circle-2" class="w-5 h-5"></i> Gerar Todas as Etiquetas
+                <i data-lucide="check-circle-2" class="w-5 h-5"></i> Gerar Visualização
             </button>
+
             <div id="errorArea" class="hidden mt-4 bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl flex items-center gap-3">
-                <i data-lucide="alert-circle" class="w-5 h-5"></i><span id="errorMsg" class="text-xs font-bold uppercase tracking-tight"></span>
+                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                <span id="errorMsg" class="text-xs font-bold uppercase tracking-tight"></span>
             </div>
         </div>
 
+        <!-- ÁREA DE PRÉ-VISUALIZAÇÃO -->
         <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
             <div id="previewArea" class="p-4 md:p-12 bg-[#E2E8F0] overflow-auto min-h-[600px] flex flex-col items-center gap-16">
+                <!-- Estado Vazio -->
                 <div id="emptyState" class="py-40 flex flex-col items-center justify-center text-center opacity-30 grayscale">
-                    <div class="bg-white p-16 rounded-full shadow-inner mb-8"><i data-lucide="file-spreadsheet" class="w-24 h-24 stroke-1 text-[#FF9900]"></i></div>
-                    <h3 class="text-4xl font-black text-slate-800 uppercase tracking-tighter">AMPL CORE</h3>
+                    <div class="bg-white p-16 rounded-full shadow-inner mb-8">
+                        <i data-lucide="file-spreadsheet" class="w-24 h-24 stroke-1 text-[#FF9900]"></i>
+                    </div>
+                    <h3 class="text-4xl font-black text-slate-800 uppercase tracking-tighter italic">AMPL CORE</h3>
+                    <p class="mt-4 font-bold text-slate-500">Suba o planejamento para gerar as etiquetas.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Inicializar Ícones Lucide
         lucide.createIcons();
+
+        // Estados
         let rawFile = null;
         let processedData = [];
 
+        // Referências DOM
         const fileInput = document.getElementById('fileInput');
         const btnProcess = document.getElementById('btnProcess');
         const btnClear = document.getElementById('btnClear');
         const btnDownload = document.getElementById('btnDownload');
         const previewArea = document.getElementById('previewArea');
         const emptyState = document.getElementById('emptyState');
+        const errorArea = document.getElementById('errorArea');
+        const errorMsg = document.getElementById('errorMsg');
+
+        // Estilo Dinâmico da Rota (Conforme código original)
+        function getRouteStyle(text) {
+            const len = text.length;
+            let size = '84px'; 
+            if (len > 4) size = '70px';
+            if (len > 6) size = '58px';
+            if (len > 8) size = '50px';
+
+            return `font-family: 'Inter', Arial, sans-serif; font-size: ${size}; font-weight: 900; color: #000000; letter-spacing: -0.05em; white-space: nowrap; line-height: 1.2; display: inline-block; text-align: center;`;
+        }
+
+        // Funções Auxiliares
+        const hideError = () => errorArea.classList.add('hidden');
+        const showError = (txt) => {
+            errorMsg.innerText = txt;
+            errorArea.classList.remove('hidden');
+        }
 
         fileInput.addEventListener('change', (e) => {
             rawFile = e.target.files[0];
             if (rawFile) {
-                document.getElementById('fileLabel').innerText = "Trocar Ficheiro";
+                document.getElementById('fileLabel').innerText = "Trocar Arquivo";
                 btnProcess.classList.remove('hidden');
+                hideError();
             }
         });
 
         btnClear.addEventListener('click', () => {
-            rawFile = null; processedData = []; fileInput.value = "";
+            rawFile = null;
+            processedData = [];
+            fileInput.value = "";
             document.getElementById('fileLabel').innerText = "Carregar Excel";
-            btnProcess.classList.add('hidden'); btnClear.classList.add('hidden');
-            btnDownload.disabled = true; previewArea.innerHTML = ''; previewArea.appendChild(emptyState);
+            btnProcess.classList.add('hidden');
+            btnClear.classList.add('hidden');
+            btnDownload.disabled = true;
+            previewArea.innerHTML = '';
+            previewArea.appendChild(emptyState);
         });
 
-        btnProcess.addEventListener('click', processExcel);
-
-        function processExcel() {
+        btnProcess.addEventListener('click', () => {
             if (!rawFile) return;
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -141,18 +186,22 @@
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(sheet);
 
+                    if (jsonData.length === 0) return showError("O arquivo parece estar vazio.");
+
                     const sample = jsonData[0];
                     const resKey = Object.keys(sample).find(k => k.toLowerCase().includes('resourceid'));
                     const labKey = Object.keys(sample).find(k => k.toLowerCase().includes('label'));
 
-                    // ORDENAÇÃO ALFANUMÉRICA (Natural Sort)
+                    if (!resKey || !labKey) return showError("Colunas 'resourceId' ou 'label' não encontradas.");
+
+                    // Ordenação Natural
                     jsonData.sort((a, b) => String(a[labKey]).localeCompare(String(b[labKey]), undefined, { numeric: true, sensitivity: 'base' }));
 
-                    const startSeq = parseInt(document.getElementById('startSequence').value) || 101;
-                    const state = document.getElementById('stateCode').value.toUpperCase();
-                    const type = document.getElementById('typeCode').value.toUpperCase();
-                    const route = document.getElementById('routeId').value.toUpperCase();
-                    const node = document.getElementById('nodeCode').value.toUpperCase();
+                    const startSeq = parseInt(document.getElementById('inSeq').value) || 101;
+                    const state = document.getElementById('inState').value.toUpperCase();
+                    const type = document.getElementById('inType').value.toUpperCase();
+                    const route = document.getElementById('inRoute').value.toUpperCase();
+                    const node = document.getElementById('inNode').value.toUpperCase();
 
                     processedData = jsonData.map((row, index) => {
                         const seq = startSeq + index;
@@ -166,84 +215,77 @@
                     renderEtiquetas();
                     btnDownload.disabled = false;
                     btnClear.classList.remove('hidden');
-                } catch (err) { alert("Erro ao processar arquivo."); }
+                    hideError();
+                } catch (err) { showError("Erro ao processar o arquivo."); }
             };
             reader.readAsArrayBuffer(rawFile);
-        }
-
-        // Função para calcular o tamanho da fonte baseado no número de caracteres
-        function getFontSize(text) {
-            const len = text.length;
-            if (len <= 4) return 'text-6xl';
-            if (len <= 6) return 'text-6xl';
-            if (len <= 8) return 'text-3xl';
-            if (len <= 10) return 'text-3xl';
-            return 'text-2xl'; // Para rotas muito longas
-        }
+        });
 
         function renderEtiquetas() {
             previewArea.innerHTML = '';
             const chunks = [];
             for (let i = 0; i < processedData.length; i += 3) chunks.push(processedData.slice(i, i + 3));
 
-            chunks.forEach((chunk, chunkIdx) => {
+            chunks.forEach((chunk, idx) => {
                 const page = document.createElement('div');
-                page.id = `page-chunk-${chunkIdx}`;
-                page.className = "flex flex-col items-center bg-white shadow-2xl border border-slate-200 relative shrink-0 mb-10";
-                page.style = "width: 210mm; height: 297mm; padding: 12mm 0;";
+                page.id = `page-chunk-${idx}`;
+                page.className = "flex flex-col items-center bg-white shadow-2xl border border-slate-200 relative shrink-0";
+                page.style = "width: 210mm; height: 297mm; padding: 15mm 0;";
                 
-                let labelsHtml = chunk.map(item => `
-                    <div class="etiqueta-container bg-white border-[2px] border-black rounded-[2.5rem] p-8 flex items-center justify-center relative overflow-hidden">
-                        <div class="grid grid-cols-[1fr_1.5fr_1fr] w-full h-full items-center">
-                            
-                            <div class="flex flex-col items-center justify-center space-y-3 text-center">
-                                <span class="text-[14px] font-black uppercase tracking-widest text-slate-900">BAG CODE</span>
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.bagCode)}" class="w-[160px] h-[160px]">
-                            </div>
+                let html = `<div class="absolute top-2 left-6 text-[9px] font-black text-slate-300 uppercase tracking-widest">AMPL PAG ${idx + 1}</div>
+                            <div class="flex flex-col items-center justify-center h-full w-full gap-8 px-4">`;
 
-                            <div class="flex flex-col items-center justify-center border-x-[2px] border-dotted border-slate-200 h-full px-4 text-center overflow-hidden">
-                                <span class="text-[12px] font-black text-[#FF9900] mb-2 tracking-[0.4em] uppercase shrink-0">ROTA</span>
-                                <div class="w-full flex items-center justify-center overflow-hidden">
-                                    <span class="rota-text font-black text-black tracking-tighter ${getFontSize(item.label)}">
-                                        ${item.label}
-                                    </span>
+                chunk.forEach(item => {
+                    html += `
+                    <div class="bg-white border-[2px] border-black rounded-[2.5rem] p-10 flex items-center justify-center relative shrink-0 etiqueta-container">
+                        <div class="grid grid-cols-[1.2fr_1.6fr_1.2fr] w-full h-full items-center">
+                            <div class="flex flex-col items-center justify-center space-y-4 text-center h-full">
+                                <span class="text-xl font-black uppercase tracking-widest text-slate-900 leading-none">BAG CODE</span>
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.bagCode)}" class="w-[180px] h-[180px] object-contain">
+                            </div>
+                            <div class="flex flex-col items-center justify-center border-x-[2px] border-dotted border-slate-200 h-full px-4 text-center">
+                                <span class="text-sm font-black text-[#FF9900] mb-4 tracking-[0.4em] uppercase shrink-0 leading-none">ROTA</span>
+                                <div class="w-full flex items-center justify-center">
+                                    <span style="${getRouteStyle(item.label)}">${item.label}</span>
                                 </div>
                             </div>
-
-                            <div class="flex flex-col items-center justify-center space-y-3 text-center">
-                                <span class="text-[14px] font-black uppercase tracking-widest text-slate-900">CARRINHO</span>
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.resourceId)}" class="w-[160px] h-[160px]">
+                            <div class="flex flex-col items-center justify-center space-y-4 text-center h-full">
+                                <span class="text-xl font-black uppercase tracking-widest text-slate-900 leading-none">CARRINHO</span>
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.resourceId)}" class="w-[180px] h-[180px] object-contain">
                             </div>
-
                         </div>
-                    </div>
-                `).join('');
+                    </div>`;
+                });
 
-                page.innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full w-full gap-6 px-4">${labelsHtml}</div>
-                    <div class="absolute bottom-4 w-full text-center text-[9px] font-bold text-slate-300 uppercase tracking-[0.6em]">AMPL LOGISTICS • ETIQUETA PADRÃO A4</div>
-                `;
+                html += `</div><div class="absolute bottom-4 w-full text-center text-[9px] font-bold text-slate-300 uppercase tracking-[0.6em]">AMPL LOGISTICS • ETIQUETA PADRÃO A4</div>`;
+                page.innerHTML = html;
                 previewArea.appendChild(page);
             });
         }
 
         btnDownload.addEventListener('click', async () => {
             const downloadText = document.getElementById('downloadText');
-            downloadText.innerText = "Processando...";
             btnDownload.disabled = true;
+            
             try {
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
                 const pages = previewArea.querySelectorAll('[id^="page-chunk-"]');
+
                 for (let i = 0; i < pages.length; i++) {
-                    const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-                    const imgData = canvas.toDataURL('image/png');
+                    downloadText.innerText = `Processando ${Math.round(((i + 1) / pages.length) * 100)}%`;
+                    await new Promise(r => setTimeout(r, 300));
+                    const canvas = await html2canvas(pages[i], { scale: 2.5, useCORS: true, backgroundColor: "#ffffff" });
+                    const imgData = canvas.toDataURL('image/png', 0.9);
                     if (i > 0) pdf.addPage();
                     pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
                 }
                 pdf.save(`AMPL_Etiquetas_${new Date().toISOString().slice(0,10)}.pdf`);
             } catch (err) { alert("Erro ao gerar PDF."); }
-            finally { downloadText.innerText = "Baixar PDF"; btnDownload.disabled = false; }
+            finally {
+                downloadText.innerText = "Baixar PDF";
+                btnDownload.disabled = false;
+            }
         });
     </script>
 </body>
