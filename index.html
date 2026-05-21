@@ -1,62 +1,115 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AMPL - Gerador de Etiquetas Premium</title>
-    
-    <!-- Scripts Externos -->
+    <title>AMPL - Gerador de Etiquetas QR</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- CDNs de Processamento e Exportação -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRious para geração local e instantânea de QR Codes (Previne falhas de banda e rede) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        
         body {
             font-family: 'Inter', sans-serif;
-            -webkit-print-color-adjust: exact;
         }
-
-        .etiqueta-container {
-            width: 190mm;
-            height: 82mm;
-            margin: 0 auto;
+        /* Custom scrollbar para visual moderno */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-
-        /* Ajuste fino para a animação da barra de progresso */
-        #progressBar {
-            transition: width 0.3s ease-in-out;
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
         }
-
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Estilos do Canvas A4 de Visualização Estrito (Sem sombras ou bordas para salvar no PDF) */
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            padding: 15mm 0;
+            background-color: #ffffff !important;
+            position: relative;
+            flex-shrink: 0;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        /* Garantias de renderização do html2canvas */
+        .html2canvas-container { 
+            width: 210mm !important; 
+            height: 297mm !important; 
+        }
+        /* Estilo dinâmico para evitar quebras de impressão nativas */
         @media print {
-            .print-hidden { display: none !important; }
+            body * {
+                visibility: hidden;
+            }
+            #previewArea, #previewArea * {
+                visibility: visible;
+            }
+            #previewArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .a4-page {
+                box-shadow: none;
+                margin: 0;
+                page-break-after: always;
+            }
         }
     </style>
 </head>
 <body class="min-h-screen bg-[#F1F5F9] text-slate-900 pb-24 relative overflow-x-hidden">
 
-    <!-- Marca d'água -->
-    <div class="fixed bottom-6 right-6 flex items-center gap-4 select-none opacity-20 hover:opacity-80 transition-opacity duration-300 pointer-events-none z-50 print-hidden">
-        <div class="bg-black p-0 rounded-2xl shadow-xl flex flex-col items-center justify-center w-14 h-14 overflow-hidden border border-slate-800 leading-none relative shrink-0">
-            <span class="text-white font-black text-[14px] tracking-tighter z-10 -mt-1 uppercase">AMPL</span>
+    <!-- Marca d'água Dinâmica -->
+    <div class="fixed bottom-6 right-6 flex items-center gap-4 select-none group opacity-25 hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 print:hidden">
+        <!-- Mini Logo -->
+        <div class="bg-black p-0 rounded-xl shadow-lg flex flex-col items-center justify-center w-12 h-12 overflow-hidden border border-slate-800 relative shrink-0">
+            <span class="text-white font-black text-[12px] tracking-tighter z-10 -mt-0.5 uppercase">AMPL</span>
             <svg viewBox="0 0 1024 1024" class="text-[#FF9900] w-full scale-150 absolute bottom-0.5" fill="currentColor">
                 <path d="M685.2 648.2c-73.4 51.2-166.4 78.4-257.6 78.4-124.6 0-234.6-43.2-319.4-114.2-8.4-7-2-18.4 8.6-13.6 100.8 45.4 223.2 72.2 344.8 72.2 92.4 0 191.4-19 269.8-56.8 11.2-5.4 20.2 6.8 11.2 13.8-0.8 0.2-1.8 0.2-2.6 0.2zM715.4 584.2c-15.6-20.2-51.4-15.8-82.6-11.8-6.6 0.8-7.8-8.2-1.4-11 50.4-22.4 126.8-15.2 139.8 1.4 12.6 16.4-1 99.4-44.4 139-5.4 6.4-13-1-9.4-6.8 28-44.8 13.6-90.8-2-110.8z" />
             </svg>
         </div>
         <div class="flex flex-col">
-            <span class="text-[11px] font-black uppercase tracking-tighter text-slate-900 leading-none">AMPL</span>
-            <span class="text-[15px] font-black text-slate-900 leading-tight">@ROOBERTT</span>
+            <span class="text-[10px] font-black uppercase tracking-tighter text-slate-900 leading-none">AMPL</span>
+            <span class="text-[13px] font-black text-[#FF9900] leading-tight">@ROOBERTT</span>
+        </div>
+    </div>
+
+    <!-- Toast de Notificações Customizado (Substitui alert) -->
+    <div id="toastNotification" class="fixed top-6 right-6 z-50 transform translate-x-96 transition-transform duration-300 pointer-events-none">
+        <div class="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3">
+            <i data-lucide="alert-circle" class="w-6 h-6"></i>
+            <div>
+                <p class="font-extrabold text-sm tracking-tight uppercase">ERRO DETECTADO</p>
+                <p id="toastMessage" class="text-xs font-semibold text-red-100"></p>
+            </div>
         </div>
     </div>
 
     <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
         <!-- CABEÇALHO -->
-        <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 print-hidden">
+        <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 print:hidden">
             <div class="flex items-center gap-5">
-                <!-- Logo Estilo Amazon -->
+                <!-- Logo AMPL Premium -->
                 <div class="bg-black p-0 rounded-2xl shadow-xl flex flex-col items-center justify-center w-24 h-24 overflow-hidden border border-slate-800 leading-none relative shrink-0">
                     <span class="text-white font-black text-3xl tracking-tighter z-10 -mt-1 uppercase">AMPL</span>
                     <svg viewBox="0 0 1024 1024" class="text-[#FF9900] w-full scale-150 absolute bottom-1" fill="currentColor">
@@ -66,285 +119,608 @@
                 <div>
                     <h1 class="text-4xl font-black text-slate-800 tracking-tighter uppercase leading-tight">AMPL</h1>
                     <p class="text-slate-500 font-bold text-sm flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-[#FF9900]"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#FF9900] animate-pulse"></span>
                         Gerador de Etiquetas Premium
                     </p>
                 </div>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <button id="btnClear" class="hidden flex items-center gap-2 bg-white border border-slate-200 text-red-500 hover:bg-red-50 px-5 py-3 rounded-xl transition-all font-bold text-sm shadow-sm">
-                    <i data-lucide="trash-2" class="w-[18px]"></i> Limpar Tudo
+                <button id="clearDataBtn" class="hidden flex items-center gap-2 bg-white border border-slate-200 text-red-500 hover:bg-red-50 px-5 py-3 rounded-xl transition-all font-bold text-sm shadow-sm">
+                    <i data-lucide="trash-2" class="w-4.5 h-4.5"></i> Limpar Tudo
                 </button>
 
-                <button id="btnDownload" disabled class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl transition-all shadow-md font-bold text-sm disabled:opacity-50 min-w-[180px] justify-center">
-                    <i id="downloadIcon" data-lucide="download" class="w-[18px]"></i>
-                    <span id="downloadText">Baixar PDF</span>
+                <button id="scrollToDownloadsBtn" class="hidden flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl transition-all shadow-md font-bold text-sm">
+                    <i data-lucide="download" class="w-4.5 h-4.5"></i> Baixar PDFs (Lotes)
                 </button>
 
                 <label class="flex items-center gap-2 px-6 py-3 rounded-xl cursor-pointer transition-all shadow-md font-bold text-sm bg-[#FF9900] hover:bg-orange-600 text-white">
-                    <i data-lucide="plus-circle" class="w-[18px]"></i>
-                    <span id="fileLabel">Carregar Excel</span>
+                    <i data-lucide="plus-circle" class="w-4.5 h-4.5"></i>
+                    <span id="uploadBtnLabel">Carregar Excel</span>
                     <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .csv" />
                 </label>
             </div>
         </header>
 
         <!-- PARÂMETROS -->
-        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print-hidden">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 print:hidden">
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Estado</span>
-                    <input id="inState" type="text" value="" placeholder="Ex: SP" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]">
+                    <input type="text" id="stateCodeInput" placeholder="Ex: SP" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold uppercase outline-none focus:ring-2 focus:ring-[#FF9900] transition-all" />
                 </div>
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Tipo</span>
-                    <input id="inType" type="text" value="X" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]">
+                    <input type="text" id="typeCodeInput" value="X" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold uppercase outline-none focus:ring-2 focus:ring-[#FF9900] transition-all" />
                 </div>
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Cód. Rota</span>
-                    <input id="inRoute" type="text" value="5060" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]">
+                    <input type="text" id="routeIdInput" value="5060" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold uppercase outline-none focus:ring-2 focus:ring-[#FF9900] transition-all" />
                 </div>
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Seq. Inicial</span>
-                    <input id="inSeq" type="number" value="101" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]">
+                    <input type="text" id="startSequenceInput" value="001" placeholder="Ex: 001" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900] transition-all" />
                 </div>
                 <div>
                     <span class="text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 block">Node</span>
-                    <input id="inNode" type="text" value="" placeholder="Ex: SSJ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-[#FF9900]">
+                    <input type="text" id="nodeCodeInput" placeholder="Ex: SSJ" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-semibold uppercase outline-none focus:ring-2 focus:ring-[#FF9900] transition-all" />
                 </div>
             </div>
             
-            <button id="btnProcess" class="hidden w-full mt-6 bg-[#FF9900] hover:bg-orange-600 text-white font-black py-4 rounded-2xl shadow-lg transition-all transform active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-2">
-                <i data-lucide="check-circle-2" class="w-5 h-5"></i> Gerar Visualização
+            <button id="generateVisualizationBtn" class="hidden w-full mt-6 bg-[#FF9900] hover:bg-orange-600 text-white font-black py-4 rounded-2xl shadow-lg transition-all transform active:scale-95 uppercase tracking-tighter flex items-center justify-center gap-2">
+                <i data-lucide="check-circle-2" class="w-5 h-5"></i> Gerar Visualização e Lotes
             </button>
-
-            <div id="errorArea" class="hidden mt-4 bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl flex items-center gap-3">
-                <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                <span id="errorMsg" class="text-xs font-bold uppercase tracking-tight"></span>
-            </div>
         </div>
 
-        <!-- BARRA DE PROGRESSO -->
-        <div id="progressContainer" class="hidden bg-white p-6 rounded-3xl shadow-sm border border-slate-200 transition-all">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Processando PDF Folha por Folha...</span>
-                <span id="progressValue" class="text-sm font-black text-[#FF9900]">0%</span>
+        <!-- NOVO PAINEL: GERENCIADOR DE LOTES INTERATIVO -->
+        <section id="batchesDashboard" class="hidden bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden print:hidden transition-all duration-500">
+            <div class="p-6 bg-gradient-to-r from-slate-900 to-slate-850 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <span class="bg-amber-500 text-slate-950 font-black text-xs px-2.5 py-1 rounded-md uppercase tracking-wider">Novo Recurso</span>
+                        <h2 class="text-xl font-extrabold tracking-tight">Gerenciador de Lotes para Download</h2>
+                    </div>
+                    <p class="text-slate-400 text-xs mt-1.5 max-w-2xl">
+                        Para evitar bloqueios de pop-up e lentidão do navegador, agrupamos automaticamente as etiquetas em lotes de exatamente <b>100 etiquetas</b> por arquivo.
+                    </p>
+                </div>
+                <button id="downloadAllSequentialBtn" class="flex items-center gap-2 bg-[#FF9900] hover:bg-orange-500 text-white px-5 py-3 rounded-xl font-bold text-sm tracking-tight transition-all self-start md:self-auto shrink-0 shadow-lg shadow-orange-500/10">
+                    <i data-lucide="box" class="w-4.5 h-4.5"></i> Baixar Todos Sequencialmente
+                </button>
             </div>
-            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                <div id="progressBar" class="bg-[#FF9900] h-full w-0 transition-all duration-300"></div>
+            <!-- Lista de Lotes -->
+            <div class="p-6 bg-slate-50 border-t border-slate-100">
+                <div id="batchesList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Gerado Dinamicamente -->
+                </div>
             </div>
-        </div>
+        </section>
 
-        <!-- ÁREA DE PRÉ-VISUALIZAÇÃO -->
+        <!-- ÁREA DE PRÉ-VISUALIZAÇÃO DAS PÁGINAS A4 -->
         <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200 overflow-hidden">
-            <div id="previewArea" class="p-4 md:p-12 bg-[#E2E8F0] overflow-auto min-h-[600px] flex flex-col items-center gap-16">
-                <!-- Estado Vazio -->
+            <div id="previewContainer" class="p-4 md:p-12 bg-[#E2E8F0] overflow-auto min-h-[600px] flex flex-col items-center gap-16">
+                <!-- Estado Vazio Inicial -->
                 <div id="emptyState" class="py-40 flex flex-col items-center justify-center text-center opacity-30 grayscale">
                     <div class="bg-white p-16 rounded-full shadow-inner mb-8">
-                        <i data-lucide="file-spreadsheet" class="w-24 h-24 stroke-1 text-[#FF9900]"></i>
+                        <i data-lucide="file-spreadsheet" class="w-24 h-24 text-[#FF9900]" stroke-width="1"></i>
                     </div>
                     <h3 class="text-4xl font-black text-slate-800 uppercase tracking-tighter italic">AMPL CORE</h3>
-                    <p class="mt-4 font-bold text-slate-500 text-center">Suba o planeamento para gerar as etiquetas.</p>
+                    <p class="mt-4 font-bold text-slate-500 text-center">Suba o planeamento excel para gerar as etiquetas.</p>
                 </div>
+                <!-- Páginas A4 serão renderizadas dinamicamente aqui -->
+                <div id="previewArea" class="flex flex-col items-center gap-16 w-full h-full"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Inicializar ícones
-        lucide.createIcons();
+        // --- ESTADO GLOBAL DA APLICAÇÃO ---
+        let globalFile = null;
+        let globalProcessedData = [];
+        let globalBatches = [];
+        let isGeneratingAll = false;
 
-        // Favicon Dinâmico
-        (function setFavicon() {
-            const svgFavicon = `
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                    <rect width="100" height="100" rx="20" fill="black"/>
-                    <text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" fill="white" font-weight="900" font-size="30" font-family="Arial">AMPL</text>
-                    <path d="M20 70 Q 50 90 80 70" stroke="#FF9900" stroke-width="8" fill="none" stroke-linecap="round"/>
-                </svg>
-            `;
-            const blob = new Blob([svgFavicon], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('link');
-            link.type = 'image/svg+xml';
-            link.rel = 'shortcut icon';
-            link.href = url;
-            document.getElementsByTagName('head')[0].appendChild(link);
-        })();
+        // --- SELETORES DO DOM ---
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtnLabel = document.getElementById('uploadBtnLabel');
+        const clearDataBtn = document.getElementById('clearDataBtn');
+        const scrollToDownloadsBtn = document.getElementById('scrollToDownloadsBtn');
+        const generateVisualizationBtn = document.getElementById('generateVisualizationBtn');
+        
+        const stateCodeInput = document.getElementById('stateCodeInput');
+        const typeCodeInput = document.getElementById('typeCodeInput');
+        const routeIdInput = document.getElementById('routeIdInput');
+        const startSequenceInput = document.getElementById('startSequenceInput');
+        const nodeCodeInput = document.getElementById('nodeCodeInput');
 
-        let rawData = [];
-        let processedData = [];
+        const batchesDashboard = document.getElementById('batchesDashboard');
+        const batchesList = document.getElementById('batchesList');
+        const downloadAllSequentialBtn = document.getElementById('downloadAllSequentialBtn');
 
-        // Estilo Dinâmico de Rota
-        function getRouteStyle(text) {
-            const len = text.length;
-            let size = '90px'; 
-            if (len > 4) size = '72px';
-            if (len > 6) size = '60px';
-            if (len > 8) size = '52px';
+        const emptyState = document.getElementById('emptyState');
+        const previewArea = document.getElementById('previewArea');
 
-            return `font-family: 'Inter', Arial, sans-serif; font-size: ${size}; font-weight: 900; color: #000000; letter-spacing: -0.05em; white-space: nowrap; line-height: 1.2; display: inline-block; text-align: center;`;
+        const toastNotification = document.getElementById('toastNotification');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // --- TRATAMENTO DOS INPUTS (Apenas números na Sequência) ---
+        startSequenceInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+
+        // --- TOAST DE ERRO CUSTOMIZADO ---
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toastNotification.classList.remove('translate-x-96');
+            setTimeout(() => {
+                toastNotification.classList.add('translate-x-96');
+            }, 5000);
         }
 
-        const fileInput = document.getElementById('fileInput');
-        const btnProcess = document.getElementById('btnProcess');
-        const btnClear = document.getElementById('btnClear');
-        const btnDownload = document.getElementById('btnDownload');
-        const previewArea = document.getElementById('previewArea');
-        const errorArea = document.getElementById('errorArea');
-        const errorMsg = document.getElementById('errorMsg');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressValue = document.getElementById('progressValue');
+        // --- FUNÇÃO PARA GERAR QR CODE LOCALMENTE E OFFLINE (Sem requisições de rede) ---
+        function generateLocalQRCode(text) {
+            try {
+                const qr = new QRious({
+                    value: text,
+                    size: 180,
+                    level: 'H' // Nível máximo de segurança para leitura em scanners industriais rápidos
+                });
+                return qr.toDataURL();
+            } catch (e) {
+                console.error("Falha ao gerar QR Code offline, utilizando fallback da API:", e);
+                return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(text)}`;
+            }
+        }
 
+        // --- INICIALIZAÇÃO E CARREGAMENTO DE ARQUIVOS ---
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files[0]) {
-                document.getElementById('fileLabel').innerText = "Arquivo Carregado";
-                btnProcess.classList.remove('hidden');
-                errorArea.classList.add('hidden');
+            const file = e.target.files[0];
+            if (file) {
+                globalFile = file;
+                uploadBtnLabel.textContent = file.name;
+                generateVisualizationBtn.classList.remove('hidden');
+                clearDataBtn.classList.remove('hidden');
+                lucide.createIcons();
             }
         });
 
-        btnProcess.addEventListener('click', () => {
-            const file = fileInput.files[0];
+        // --- LIMPEZA COMPLETA DE ESTADOS ---
+        clearDataBtn.addEventListener('click', () => {
+            globalFile = null;
+            globalProcessedData = [];
+            globalBatches = [];
+            isGeneratingAll = false;
+
+            fileInput.value = '';
+            uploadBtnLabel.textContent = 'Carregar Excel';
+            
+            stateCodeInput.value = '';
+            typeCodeInput.value = 'X';
+            routeIdInput.value = '5060';
+            startSequenceInput.value = '001';
+            nodeCodeInput.value = '';
+
+            generateVisualizationBtn.classList.add('hidden');
+            clearDataBtn.classList.add('hidden');
+            scrollToDownloadsBtn.classList.add('hidden');
+            batchesDashboard.classList.add('hidden');
+            
+            emptyState.classList.remove('hidden');
+            previewArea.innerHTML = '';
+            batchesList.innerHTML = '';
+
+            lucide.createIcons();
+        });
+
+        // Rolagem suave até o dashboard de controle de download
+        scrollToDownloadsBtn.addEventListener('click', () => {
+            batchesDashboard.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // --- PROCESSAMENTO DO EXCEL E ARQUITETURA DE LOTES (1-100, 101-200...) ---
+        generateVisualizationBtn.addEventListener('click', () => {
+            if (!globalFile) return;
+
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = function(e) {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
+                    const workbook = XLSX.read(data, { type: 'array' });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet);
+                    const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-                    if (json.length === 0) throw new Error("Arquivo vazio");
+                    if (jsonData.length === 0) {
+                        showToast("O ficheiro parece estar vazio.");
+                        return;
+                    }
 
-                    const sample = json[0];
+                    const sample = jsonData[0];
                     const resKey = Object.keys(sample).find(k => k.toLowerCase().includes('resourceid'));
                     const labKey = Object.keys(sample).find(k => k.toLowerCase().includes('label'));
 
-                    if (!resKey || !labKey) throw new Error("Colunas necessárias não encontradas");
+                    if (!resKey || !labKey) {
+                        showToast("Colunas 'resourceId' ou 'label' não encontradas no arquivo.");
+                        return;
+                    }
 
-                    // Ordenação Natural
-                    json.sort((a, b) => String(a[labKey]).localeCompare(String(b[labKey]), undefined, {numeric: true, sensitivity: 'base'}));
+                    // ORDENAÇÃO ALFANUMÉRICA NATURAL ROBUSTA (Organiza matematicamente do 1 ao 100)
+                    const sortedData = [...jsonData].sort((a, b) => {
+                        const valA = String(a[labKey] || '').trim();
+                        const valB = String(b[labKey] || '').trim();
+                        return valA.localeCompare(valB, 'pt-BR', { numeric: true, sensitivity: 'base' });
+                    });
 
-                    const startSeq = parseInt(document.getElementById('inSeq').value) || 101;
-                    const state = document.getElementById('inState').value.toUpperCase();
-                    const type = document.getElementById('inType').value.toUpperCase();
-                    const route = document.getElementById('inRoute').value.toUpperCase();
-                    const node = document.getElementById('inNode').value.toUpperCase();
+                    // Parâmetros estruturais
+                    const stateCode = stateCodeInput.value.toUpperCase();
+                    const typeCode = typeCodeInput.value.toUpperCase();
+                    const routeId = routeIdInput.value.toUpperCase();
+                    const startSequence = startSequenceInput.value;
+                    const nodeCode = nodeCodeInput.value.toUpperCase();
 
-                    processedData = json.map((row, i) => ({
-                        resourceId: String(row[resKey]).trim(),
-                        label: String(row[labKey]).trim(),
-                        bagCode: `${state}-${type}-${route}-${startSeq + i}-${node}`
-                    }));
+                    const startNum = parseInt(startSequence, 10) || 1;
+                    const paddingLength = startSequence.length > 0 ? startSequence.length : 3;
 
-                    renderPreview();
-                    btnDownload.disabled = false;
-                    btnClear.classList.remove('hidden');
+                    // Mapeamento dos Dados de Forma Dinâmica
+                    globalProcessedData = sortedData.map((row, index) => {
+                        const currentSeq = startNum + index;
+                        const seqFormatted = String(currentSeq).padStart(paddingLength, '0');
+                        return {
+                            resourceId: String(row[resKey]).trim(),
+                            label: String(row[labKey]).trim(),
+                            bagCode: `${stateCode}-${typeCode}-${routeId}-${seqFormatted}-${nodeCode}`
+                        };
+                    });
+
+                    // --- CONSTRUÇÃO DE LOTES EXATOS DE 100 ETIQUETAS ---
+                    const labelsPerBatch = 100;
+                    const totalLabels = globalProcessedData.length;
+                    const totalBatchesCount = Math.ceil(totalLabels / labelsPerBatch);
+                    
+                    globalBatches = [];
+                    for (let b = 0; b < totalBatchesCount; b++) {
+                        const startIdx = b * labelsPerBatch;
+                        const endIdx = Math.min((b + 1) * labelsPerBatch, totalLabels);
+                        const batchLabels = globalProcessedData.slice(startIdx, endIdx);
+                        
+                        // Divide as etiquetas do lote em subgrupos de 3 (folha A4)
+                        const pages = [];
+                        for (let p = 0; p < batchLabels.length; p += 3) {
+                            pages.push(batchLabels.slice(p, p + 3));
+                        }
+                        
+                        const startSeqFormatted = String(startNum + startIdx).padStart(paddingLength, '0');
+                        const endSeqFormatted = String(startNum + endIdx - 1).padStart(paddingLength, '0');
+                        
+                        globalBatches.push({
+                            id: b,
+                            labelRange: `Etiquetas ${startSeqFormatted} a ${endSeqFormatted}`,
+                            pages: pages,
+                            status: 'pending'
+                        });
+                    }
+
+                    // Renderizar as páginas A4 respeitando as quebras de lote de 100
+                    renderPreviews();
+                    // Criar os botões do dashboard de Lotes
+                    buildBatchesDashboard();
+
+                    // Rolar com pequeno atraso para a visualização carregar
+                    setTimeout(() => {
+                        batchesDashboard.scrollIntoView({ behavior: 'smooth' });
+                    }, 350);
+
                 } catch (err) {
-                    errorMsg.innerText = err.message;
-                    errorArea.classList.remove('hidden');
+                    console.error(err);
+                    showToast("Erro ao ler e processar as colunas do Excel.");
                 }
             };
-            reader.readAsArrayBuffer(file);
+            reader.readAsArrayBuffer(globalFile);
         });
 
-        function renderPreview() {
+        // --- STREAMING_CHUNK: Renderizando visualizacao estrita do Canvas A4 sem linhas divisórias ---
+        // --- GERADOR DE PREVIEWS (Páginas estruturadas por lotes de 100) ---
+        function renderPreviews() {
             previewArea.innerHTML = '';
-            const chunks = [];
-            for (let i = 0; i < processedData.length; i += 3) chunks.push(processedData.slice(i, i + 3));
+            emptyState.classList.add('hidden');
+            scrollToDownloadsBtn.classList.remove('hidden');
 
-            chunks.forEach((chunk, idx) => {
-                const page = document.createElement('div');
-                page.id = `page-chunk-${idx}`;
-                page.className = "flex flex-col items-center bg-white shadow-2xl border border-slate-200 relative shrink-0 mb-10";
-                page.style = "width: 210mm; height: 297mm; padding: 15mm 0;";
-                
-                let html = `<div class="absolute top-2 left-6 text-[9px] font-black text-slate-300 uppercase tracking-widest">AMPL PAG ${idx + 1}</div>
-                            <div class="flex flex-col items-center justify-center h-full w-full gap-8 px-4">`;
+            let absolutePageNum = 1;
+            const totalPagesCount = globalBatches.reduce((acc, batch) => acc + batch.pages.length, 0);
 
-                chunk.forEach(item => {
-                    html += `
-                    <div class="etiqueta-container bg-white border-[2px] border-black rounded-[2.5rem] p-10 flex items-center justify-center relative shrink-0">
-                        <div class="grid grid-cols-[1.2fr_1.6fr_1.2fr] w-full h-full items-center">
-                            <!-- BAG CODE -->
-                            <div class="flex flex-col items-center justify-center space-y-4 text-center h-full">
-                                <span class="text-xl font-black uppercase tracking-widest text-slate-900 leading-none">BAG CODE</span>
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.bagCode)}" class="w-[180px] h-[180px] object-contain">
-                            </div>
-                            
-                            <!-- ROTA CENTRALIZADA -->
-                            <div class="flex flex-col items-center justify-center border-x-[2px] border-dotted border-slate-200 h-full px-4 text-center">
-                                <span class="text-sm font-black text-[#FF9900] mb-4 tracking-[0.4em] uppercase shrink-0 leading-none">ROTA</span>
-                                <div class="w-full flex items-center justify-center">
-                                    <span style="${getRouteStyle(item.label)}">${item.label}</span>
+            globalBatches.forEach((batch, batchIdx) => {
+                // Divisor visual no navegador para separar os lotes de 100
+                const batchDivider = document.createElement('div');
+                batchDivider.className = "w-full text-center py-4 text-slate-500 font-extrabold text-sm uppercase tracking-wider border-b border-dashed border-slate-300 my-4 print:hidden";
+                batchDivider.innerHTML = `<i data-lucide="box" class="inline w-4 h-4 mr-1"></i> Lote #${batchIdx + 1} (${batch.labelRange})`;
+                previewArea.appendChild(batchDivider);
+
+                batch.pages.forEach((pageChunk, pageIdx) => {
+                    // Wrapper visual do A4 no navegador
+                    const visualWrapper = document.createElement('div');
+                    visualWrapper.className = "bg-white shadow-2xl border border-slate-200 rounded-3xl overflow-hidden shrink-0 print:shadow-none print:border-none p-1 bg-[#E2E8F0]";
+
+                    // Elemento Real da Página A4 (100% Branco)
+                    const pageNode = document.createElement('div');
+                    pageNode.id = `page-batch-${batchIdx}-page-${pageIdx}`;
+                    pageNode.className = "flex flex-col items-center justify-between bg-white relative shrink-0 a4-page";
+                    pageNode.style.backgroundColor = '#ffffff';
+                    
+                    // Cabeçalho do A4
+                    const topHeader = document.createElement('div');
+                    topHeader.className = "absolute top-2 left-6 text-[9px] font-black text-slate-300 uppercase tracking-widest";
+                    topHeader.textContent = `AMPL PAG ${absolutePageNum} de ${totalPagesCount} (Lote ${batchIdx + 1})`;
+                    pageNode.appendChild(topHeader);
+
+                    // Container interno de etiquetas
+                    const labelsContainer = document.createElement('div');
+                    labelsContainer.className = "flex flex-col items-center justify-center h-full w-full gap-8 px-4";
+
+                    pageChunk.forEach((item) => {
+                        // Bloco de etiqueta de 190mm por 82mm
+                        const labelBlock = document.createElement('div');
+                        labelBlock.className = "bg-white border-[2px] border-black rounded-[2.5rem] p-10 flex items-center justify-center relative overflow-hidden shrink-0";
+                        labelBlock.style.width = '190mm';
+                        labelBlock.style.height = '82mm';
+                        labelBlock.style.margin = '0 auto';
+
+                        // Estilo dinâmico para Rota (Sem clippings e responsivo)
+                        const labelLen = item.label.length;
+                        let routeFontSize = '76px';
+                        if (labelLen === 4) routeFontSize = '64px';
+                        else if (labelLen === 5) routeFontSize = '54px';
+                        else if (labelLen === 6) routeFontSize = '46px';
+                        else if (labelLen === 7) routeFontSize = '40px';
+                        else if (labelLen >= 8) routeFontSize = '32px';
+
+                        const qrBagBase64 = generateLocalQRCode(item.bagCode);
+                        const qrCartBase64 = generateLocalQRCode(item.resourceId);
+
+                        // Grid com 22%/56%/22% para dar foco total à Rota e remover bordas divisórias verticais pontilhadas
+                        labelBlock.innerHTML = `
+                            <div class="grid grid-cols-[22%_56%_22%] w-full h-full items-center">
+                                <!-- BAG CODE -->
+                                <div class="flex flex-col items-center justify-center space-y-4 text-center h-full">
+                                    <span class="text-xl font-black uppercase tracking-widest text-slate-900 leading-none">BAG CODE</span>
+                                    <div class="w-[180px] h-[180px] flex items-center justify-center overflow-hidden">
+                                        <img src="${qrBagBase64}" 
+                                             class="w-full h-full object-contain" 
+                                             alt="QR Bag" />
+                                    </div>
+                                </div>
+
+                                <!-- ROTA (Sem linhas divisórias verticais de acordo com as especificações) -->
+                                <div class="flex flex-col items-center justify-center h-full px-2 text-center">
+                                    <span class="text-sm font-black text-[#FF9900] mb-4 tracking-[0.4em] uppercase shrink-0 leading-none">ROTA</span>
+                                    <div class="w-full flex items-center justify-center">
+                                        <span style="font-family: 'Inter', Arial, sans-serif; font-size: ${routeFontSize}; font-weight: 900; color: #000000; letter-spacing: -0.02em; white-space: nowrap; line-height: 1; display: inline-block; text-align: center;">
+                                            ${item.label}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- CARRINHO -->
+                                <div class="flex flex-col items-center justify-center space-y-4 text-center h-full">
+                                    <span class="text-xl font-black uppercase tracking-widest text-slate-900 leading-none">CARRINHO</span>
+                                    <div class="w-[180px] h-[180px] flex items-center justify-center overflow-hidden">
+                                        <img src="${qrCartBase64}" 
+                                             class="w-full h-full object-contain" 
+                                             alt="QR Carrinho" />
+                                    </div>
                                 </div>
                             </div>
+                        `;
+                        labelsContainer.appendChild(labelBlock);
+                    });
 
-                            <!-- CARRINHO -->
-                            <div class="flex flex-col items-center justify-center space-y-4 text-center h-full">
-                                <span class="text-xl font-black uppercase tracking-widest text-slate-900 leading-none">CARRINHO</span>
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(item.resourceId)}" class="w-[180px] h-[180px] object-contain">
-                            </div>
-                        </div>
-                    </div>`;
+                    // Caso a última folha A4 do lote possua menos de 3 etiquetas, insere blocos fantasmas invisíveis para manter o alinhamento
+                    if (pageChunk.length < 3) {
+                        for (let emptyIdx = 0; emptyIdx < (3 - pageChunk.length); emptyIdx++) {
+                            const placeholderBlock = document.createElement('div');
+                            placeholderBlock.className = "invisible shrink-0";
+                            placeholderBlock.style.width = '190mm';
+                            placeholderBlock.style.height = '82mm';
+                            labelsContainer.appendChild(placeholderBlock);
+                        }
+                    }
+
+                    pageNode.appendChild(labelsContainer);
+
+                    // Rodapé do A4
+                    const bottomFooter = document.createElement('div');
+                    bottomFooter.className = "absolute bottom-4 w-full text-center text-[9px] font-bold text-slate-300 uppercase tracking-[0.6em]";
+                    bottomFooter.textContent = "AMPL LOGISTICS • ETIQUETA PADRÃO A4";
+                    pageNode.appendChild(bottomFooter);
+
+                    visualWrapper.appendChild(pageNode);
+                    previewArea.appendChild(visualWrapper);
+                    
+                    absolutePageNum++;
                 });
-
-                html += `</div><div class="absolute bottom-4 w-full text-center text-[9px] font-bold text-slate-300 uppercase tracking-[0.6em]">AMPL LOGISTICS • ETIQUETA PADRÃO A4</div>`;
-                page.innerHTML = html;
-                previewArea.appendChild(page);
             });
+
+            lucide.createIcons();
         }
 
-        // DOWNLOAD COM PROCESSAMENTO FOLHA POR FOLHA
-        btnDownload.addEventListener('click', async function() {
-            const downloadBtn = this;
-            const downloadText = document.getElementById('downloadText');
-            downloadBtn.disabled = true;
-            progressContainer.classList.remove('hidden');
+        // --- STREAMING_CHUNK: Construindo dashboard de controle dos lotes ---
+        // --- CONSTRUTOR DO PAINEL DE LOTES ---
+        function buildBatchesDashboard() {
+            batchesDashboard.classList.remove('hidden');
+            batchesList.innerHTML = '';
 
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-            const pages = previewArea.querySelectorAll('[id^="page-chunk-"]');
+            globalBatches.forEach((batch) => {
+                const part = batch.id;
+                // Criar card dinâmico
+                const card = document.createElement('div');
+                card.id = `batch-card-${part}`;
+                card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-md";
 
-            for (let i = 0; i < pages.length; i++) {
-                // Atualizar progresso
-                const pct = Math.round(((i + 1) / pages.length) * 100);
-                progressBar.style.width = `${pct}%`;
-                progressValue.innerText = `${pct}%`;
-                downloadText.innerText = `Lendo ${i+1}/${pages.length}`;
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-slate-100 text-slate-600 rounded-xl" id="batch-icon-box-${part}">
+                                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm">Lote #${part + 1}</h3>
+                                <p class="text-xs text-slate-400 font-semibold" id="batch-sub-txt-${part}">${batch.labelRange}</p>
+                            </div>
+                        </div>
+                        <span id="batch-badge-${part}" class="bg-slate-100 text-slate-500 font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider">Pendente</span>
+                    </div>
+                    <button onclick="downloadBatch(${part})" id="batch-btn-${part}" class="w-full flex items-center justify-center gap-2 bg-slate-900 text-white hover:bg-slate-800 py-2.5 px-4 rounded-xl text-xs font-bold transition-all mt-2">
+                        <i data-lucide="download" class="w-4 h-4"></i> Baixar Lote ${part + 1}
+                    </button>
+                `;
+                batchesList.appendChild(card);
+            });
+            lucide.createIcons();
+        }
 
-                // Processamento de imagem por página (Folha por folha)
-                // Usamos delay curto para permitir que a UI respire e atualize o progresso
-                await new Promise(r => setTimeout(r, 200));
+        // --- STREAMING_CHUNK: Lógica de download com liberação ativa de GPU e contador crescente ---
+        // --- GERADOR DE PDF DE UM LOTE ESPECÍFICO (Com liberação ativa e controle de cache) ---
+        async function downloadBatch(partId) {
+            const batch = globalBatches.find(b => b.id === partId);
+            if (!batch) return;
 
-                const canvas = await html2canvas(pages[i], {
-                    scale: 2.5, // Alta resolução
-                    useCORS: true,
-                    backgroundColor: "#ffffff",
-                    logging: false
-                });
+            // Inicia o progresso como processando (0%)
+            updateBatchStatus(partId, 'processing', 0);
 
-                const imgData = canvas.toDataURL('image/jpeg', 0.9);
-                if (i > 0) pdf.addPage();
-                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+            try {
+                const { jsPDF } = window.jspdf;
+                // Inicialização do PDF A4
+                let pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+                let pageAdded = false;
+                const totalPages = batch.pages.length;
 
-                // LIMPEZA CRÍTICA: Descartar canvas e limpar referências para economizar memória
-                canvas.width = 0;
-                canvas.height = 0;
-                canvas.remove();
+                for (let i = 0; i < totalPages; i++) {
+                    const pageElement = document.getElementById(`page-batch-${partId}-page-${i}`);
+                    if (pageElement) {
+                        // Delay super rápido de renderização
+                        await new Promise(resolve => setTimeout(resolve, 30));
+
+                        // ESCALA DE RESOLUÇÃO EM 1.0 (Ótima velocidade e sem sombras/cinzas, fundo totalmente branco)
+                        let canvas = await html2canvas(pageElement, {
+                            scale: 1.0, 
+                            useCORS: false, // QR codes locais descartam CORS
+                            backgroundColor: "#ffffff", // Garante fundo branco puro
+                            logging: false,
+                            allowTaint: true,
+                            removeContainer: true // Remove containers temporários do DOM imediatamente
+                        });
+
+                        // Compressão leve (0.70) para download de arquivo otimizado
+                        let imgData = canvas.toDataURL('image/png', 0.70);
+                        if (pageAdded) {
+                            pdf.addPage();
+                        } else {
+                            pageAdded = true;
+                        }
+                        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+
+                        // --- EXPULSÃO DE CACHE DO MOTOR DE RENDERIZAÇÃO ---
+                        canvas.width = 0;
+                        canvas.height = 0;
+                        canvas = null; // Libera buffer de GPU
+                        imgData = null; // Esvazia string Base64 do heap
+                    }
+
+                    // Atualiza o progresso crescente (0% ao 100%)
+                    const percent = Math.round(((i + 1) / totalPages) * 100);
+                    updateBatchStatus(partId, 'processing', percent);
+                }
+
+                // Ajusta o progresso ao máximo (100%) antes de salvar
+                updateBatchStatus(partId, 'processing', 100);
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                pdf.save(`AMPL_Etiquetas_Lote_${partId + 1}_${new Date().toISOString().slice(0,10)}.pdf`);
+                
+                // Limpeza ativa de memória
+                pdf = null;
+                updateBatchStatus(partId, 'completed');
+
+            } catch (err) {
+                console.error(err);
+                updateBatchStatus(partId, 'error');
+                showToast(`Falha crítica na renderização do Lote #${partId + 1}`);
+            }
+        }
+
+        // --- GERENCIADOR DE ESTADO VISUAL DOS LOTES COM PROGRESÃO CRESCENTE (0% a 100%) ---
+        function updateBatchStatus(partId, status, percent = 0) {
+            const batch = globalBatches.find(b => b.id === partId);
+            if (batch) batch.status = status;
+
+            const card = document.getElementById(`batch-card-${partId}`);
+            const badge = document.getElementById(`batch-badge-${partId}`);
+            const button = document.getElementById(`batch-btn-${partId}`);
+            const iconBox = document.getElementById(`batch-icon-box-${partId}`);
+
+            if (!card || !badge || !button || !iconBox) return;
+
+            // Resetar classes padrão do botão e do badge
+            badge.className = "font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider ";
+            button.disabled = false;
+
+            if (status === 'processing') {
+                badge.className = "font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider bg-amber-100 text-amber-600";
+                badge.textContent = `${percent}%`;
+                iconBox.className = "p-3 bg-amber-50 text-amber-500 rounded-xl animate-pulse";
+                button.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processando... ${percent}%`;
+                button.className = "w-full flex items-center justify-center gap-2 bg-amber-500 text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all mt-2 cursor-wait";
+                button.disabled = true;
+            } else if (status === 'completed') {
+                badge.classList.add("bg-emerald-100", "text-emerald-600");
+                badge.textContent = "Baixado";
+                iconBox.className = "p-3 bg-emerald-50 text-emerald-500 rounded-xl";
+                button.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Baixar Novamente`;
+                button.className = "w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all mt-2";
+            } else if (status === 'error') {
+                badge.classList.add("bg-red-100", "text-red-600");
+                badge.textContent = "Erro";
+                iconBox.className = "p-3 bg-red-50 text-red-500 rounded-xl";
+                button.innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4"></i> Tentar Novamente`;
+                button.className = "w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all mt-2";
+            } else {
+                badge.classList.add("bg-slate-100", "text-slate-500");
+                badge.textContent = "Pendente";
+                iconBox.className = "p-3 bg-slate-100 text-slate-600 rounded-xl";
+                button.innerHTML = `<i data-lucide="download" class="w-4 h-4"></i> Baixar Lote ${partId + 1}`;
+                button.className = "w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all mt-2";
             }
 
-            pdf.save(`AMPL_Etiquetas_Premium_${new Date().toISOString().slice(0,10)}.pdf`);
-            
-            downloadText.innerText = "Baixar PDF";
-            downloadBtn.disabled = false;
-            setTimeout(() => progressContainer.classList.add('hidden'), 2000);
+            lucide.createIcons();
+        }
+
+        // --- DOWNLOAD SEQUENCIAL DE TODOS OS LOTES (Com gap seguro de 1.5s para limpeza ativa de cache) ---
+        downloadAllSequentialBtn.addEventListener('click', async () => {
+            if (isGeneratingAll) return;
+            isGeneratingAll = true;
+
+            downloadAllSequentialBtn.disabled = true;
+
+            for (let i = 0; i < globalBatches.length; i++) {
+                downloadAllSequentialBtn.innerHTML = `<i data-lucide="loader-2" class="w-4.5 h-4.5 animate-spin"></i> Baixando Lote ${i + 1}/${globalBatches.length}...`;
+                lucide.createIcons();
+                
+                await downloadBatch(i);
+                
+                // Intervalo estendido de 1.5s que permite que o coletor de lixo limpe a RAM de forma passiva
+                if (i < globalBatches.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
+            }
+
+            isGeneratingAll = false;
+            downloadAllSequentialBtn.disabled = false;
+            downloadAllSequentialBtn.innerHTML = `<i data-lucide="box" class="w-4.5 h-4.5"></i> Baixar Todos Sequencialmente`;
+            lucide.createIcons();
         });
 
-        btnClear.onclick = () => location.reload();
-
+        // Executar inicialização do Lucide no load inicial do HTML
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
     </script>
 </body>
 </html>
